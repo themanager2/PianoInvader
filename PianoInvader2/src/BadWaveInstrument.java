@@ -150,17 +150,32 @@ public class BadWaveInstrument extends JPanel
 
     private void drawKeyboard(Graphics2D g2) {
         int keyWidth = WIDTH / NUM_KEYS;
+        int centerKey = NUM_KEYS / 2;
 
         for (int i = 0; i < NUM_KEYS; i++) {
-            int x = i * keyWidth;
+            int xLeft = i * keyWidth;
+            int xRight = xLeft + keyWidth;
+
+            // Distance from center controls height
+            int distanceFromCenter = Math.abs(i - centerKey);
+
+            double heightFactor = 1.0 - (distanceFromCenter / (double) centerKey);
+            int topY = KEYBOARD_Y + (int)(KEY_HEIGHT * (1.0 - heightFactor));
+
+            Polygon keyShape = new Polygon(
+                    new int[] { xLeft, xRight, xRight, xLeft },
+                    new int[] { KEYBOARD_Y + KEY_HEIGHT, KEYBOARD_Y + KEY_HEIGHT, topY, topY },
+                    4
+            );
 
             g2.setColor(i % 2 == 0 ? Color.WHITE : new Color(220, 220, 220));
-            g2.fillRect(x, KEYBOARD_Y, keyWidth - 2, KEY_HEIGHT);
+            g2.fillPolygon(keyShape);
 
             g2.setColor(Color.BLACK);
-            g2.drawRect(x, KEYBOARD_Y, keyWidth - 2, KEY_HEIGHT);
+            g2.drawPolygon(keyShape);
         }
     }
+
 
     private void drawProjectiles(Graphics2D g2) {
         g2.setColor(Color.BLACK);
