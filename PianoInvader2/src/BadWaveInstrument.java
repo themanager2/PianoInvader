@@ -6,10 +6,15 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 
 public class BadWaveInstrument extends JPanel
         implements ActionListener, MouseListener {
-
+    // ---------------- Sound Effects ----------------
+    private Clip hornClip;
+    private Clip fartClip;
     // ---------------- Window ----------------
     private static final int WIDTH = 900;
     private static final int HEIGHT = 600;
@@ -52,16 +57,31 @@ public class BadWaveInstrument extends JPanel
             frame.setVisible(true);
         });
     }
-
+    private Clip loadClip(String path) {
+        try {
+            AudioInputStream audio = AudioSystem.getAudioInputStream(
+                    getClass().getResource(path)
+            );
+            Clip clip = AudioSystem.getClip();
+            clip.open(audio);
+            return clip;
+        } catch (Exception e) {
+            System.err.println("Failed to load sound: " + path);
+            return null;
+        }
+    }
     // ---------------- Constructor ----------------
     public BadWaveInstrument() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setBackground(new Color(245, 242, 235));
         addMouseListener(this);
 
-        // IMPORTANT: initialize everything BEFORE repainting
         wave = new Wave();
         initMidi();
+
+        // Load sound effects
+        hornClip = loadClip("/sounds/fart-01.wav");
+        fartClip = loadClip("/sounds/fart-04.wav");
 
         timer = new javax.swing.Timer(16, this);
         timer.start();
