@@ -1,76 +1,94 @@
 import java.awt.*;
 
 /**
- * TriangleShape: stationary triangular piano body
+ * TriangleShape: triangular piano body drawn on screen.
+ * Inherits from GameObject.
  */
 public class TriangleShape extends GameObject {
-
-    private Color bodyColor = new Color(60, 60, 60);
-    private Color keyColor = Color.WHITE;
-    private int keyCount = 14;
+    private Color bodyColor;
+    private Color keyColor;
+    private int keyCount;
 
     public TriangleShape(int x, int y, int width, int height) {
         super(x, y, width, height);
+        this.bodyColor = Color.DARK_GRAY;
+        this.keyColor = Color.WHITE;
+        this.keyCount = 20; // now 20 keys
     }
 
     @Override
     public void draw(Graphics g) {
-        Graphics2D g2 = (Graphics2D) g;
-
         int x = getX();
         int y = getY();
         int w = getWidth();
         int h = getHeight();
 
-        // ---- Draw triangle body ----
-        Polygon triangle = new Polygon(
-                new int[]{ x, x + w, x + w / 2 },
-                new int[]{ y + h, y + h, y },
-                3
-        );
+        // TRUE TRIANGLE (restored)
+        int topX = x + w / 2;
+        int topY = y;
+        int bottomLeftX = x;
+        int bottomLeftY = y + h;
+        int bottomRightX = x + w;
+        int bottomRightY = y + h;
 
-        g2.setColor(bodyColor);
-        g2.fillPolygon(triangle);
-        g2.setColor(Color.BLACK);
-        g2.drawPolygon(triangle);
+        Polygon tri = new Polygon();
+        tri.addPoint(topX, topY);
+        tri.addPoint(bottomLeftX, bottomLeftY);
+        tri.addPoint(bottomRightX, bottomRightY);
 
-        // ---- Draw piano keys inside triangle ----
-        drawKeys(g2);
-    }
+        g.setColor(bodyColor);
+        g.fillPolygon(tri);
 
-    private void drawKeys(Graphics2D g2) {
-        int x = getX();
-        int y = getY();
-        int w = getWidth();
-        int h = getHeight();
+        // --- KEY DRAWING ---
+        // Keys must fit inside the triangle edges.
+        // We compute the left and right slanted edges as lines.
 
-        int baseY = y + h;
-        int keyHeight = h / 3;
-        int keyWidth = w / keyCount;
+        double leftSlope = (double)(topX - bottomLeftX) / (topY - bottomLeftY);
+        double rightSlope = (double)(topX - bottomRightX) / (topY - bottomRightY);
 
-        int center = keyCount / 2;
+        int keyH = h / 3; // key height
+        int keyW = w / keyCount;
 
         for (int i = 0; i < keyCount; i++) {
-            int left = x + i * keyWidth;
-            int right = left + keyWidth;
+            int leftX = x + i * keyW;
+            int rightX = leftX + keyW;
 
-            double factor = 1.0 - (Math.abs(i - center) / (double) center);
-            int topY = baseY - (int) (keyHeight * factor);
+            // Compute top Y of keys
+            int topKeyY = y + h - keyH;
 
-            Polygon key = new Polygon(
-                    new int[]{ left, right, right, left },
-                    new int[]{ baseY, baseY, topY, topY },
-                    4
-            );
+            // Compute slanted top-left X based on triangle edge
+            int topLeftX = (int)(topX + (topKeyY - topY) * leftSlope);
+            int topRightX = (int)(topX + (topKeyY - topY) * rightSlope);
 
-            g2.setColor(i % 2 == 0 ? keyColor : new Color(200, 200, 200));
-            g2.fillPolygon(key);
-            g2.setColor(Color.BLACK);
-            g2.drawPolygon(key);
+            // Interpolate key top positions between the two slanted edges
+            double t1 = (double)(leftX - bottomLeftX) / (bottomRightX - bottomLeftX);
+            double t2 = (double)(rightX - bottomLeftX) / (bottomRightX - bottomLeftX);
+
+            int keyTopLeftX = (int)(topLeftX + t1 * (topRightX - topLeftX));
+            int keyTopRightX = (int)(topLeftX + t2 * (topRightX - topLeftX));
+
+            int bottomY = y + h;
+
+            Polygon key = new Polygon();
+            key.addPoint(keyTopLeftX, topKeyY);
+            key.addPoint(keyTopRightX, topKeyY);
+            key.addPoint(rightX, bottomY);
+            key.addPoint(leftX, bottomY);
+
+            g.setColor(keyColor);
+            g.fillPolygon(key);
+
+            g.setColor(Color.BLACK);
+            g.drawPolygon(key);
         }
     }
 
-    public int getKeyCount() {
-        return keyCount;
-    }
+    public Color getBodyColor() { return bodyColor; }
+    public void setBodyColor(Color bodyColor) { this.bodyColor = bodyColor; }
+
+    public Color getKeyColor() { return keyColor; }
+    public void setKeyColor(Color keyColor) { this.keyColor = keyColor; }
+
+    public int getKeyCount() { return keyCount; }
+    public void setKeyCount(int keyCount) { this.keyCount = keyCount; }
 }
