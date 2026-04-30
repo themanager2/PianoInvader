@@ -1,10 +1,10 @@
 import java.awt.Graphics;
 
 /**
- * Abstract base class for drawable game objects.
- * Encapsulation: private fields with getters/setters.
+ * Base class for drawable game objects
  */
 public abstract class GameObject {
+
     private int x;
     private int y;
     private int width;
@@ -19,7 +19,7 @@ public abstract class GameObject {
 
     public abstract void draw(Graphics g);
 
-    // Getters / Setters
+    // Getters / setters
     public int getX() { return x; }
     public void setX(int x) { this.x = x; }
 

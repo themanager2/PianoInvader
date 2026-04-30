@@ -1,55 +1,76 @@
 import java.awt.*;
 
 /**
- * TriangleShape: triangular piano body drawn on screen.
- * Inherits from GameObject.
+ * TriangleShape: stationary triangular piano body
  */
 public class TriangleShape extends GameObject {
-    private Color bodyColor;
-    private Color keyColor;
-    private int keyCount;
+
+    private Color bodyColor = new Color(60, 60, 60);
+    private Color keyColor = Color.WHITE;
+    private int keyCount = 14;
 
     public TriangleShape(int x, int y, int width, int height) {
         super(x, y, width, height);
-        this.bodyColor = Color.DARK_GRAY;
-        this.keyColor = Color.WHITE;
-        this.keyCount = 7;
     }
 
     @Override
     public void draw(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g;
+
         int x = getX();
         int y = getY();
         int w = getWidth();
         int h = getHeight();
 
-        Polygon tri = new Polygon();
-        tri.addPoint(x + w / 2, y);       // top
-        tri.addPoint(x, y + h);           // bottom-left
-        tri.addPoint(x + w, y + h);       // bottom-right
+        // ---- Draw triangle body ----
+        Polygon triangle = new Polygon(
+                new int[]{ x, x + w, x + w / 2 },
+                new int[]{ y + h, y + h, y },
+                3
+        );
 
-        g.setColor(bodyColor);
-        g.fillPolygon(tri);
+        g2.setColor(bodyColor);
+        g2.fillPolygon(triangle);
+        g2.setColor(Color.BLACK);
+        g2.drawPolygon(triangle);
 
-        // Draw simple keys at the base
-        int keyW = Math.max(4, w / keyCount);
-        int ky = y + h - (h / 6);
+        // ---- Draw piano keys inside triangle ----
+        drawKeys(g2);
+    }
+
+    private void drawKeys(Graphics2D g2) {
+        int x = getX();
+        int y = getY();
+        int w = getWidth();
+        int h = getHeight();
+
+        int baseY = y + h;
+        int keyHeight = h / 3;
+        int keyWidth = w / keyCount;
+
+        int center = keyCount / 2;
+
         for (int i = 0; i < keyCount; i++) {
-            int kx = x + i * keyW;
-            g.setColor(keyColor);
-            g.fillRect(kx + 2, ky, keyW - 4, h / 6 - 2);
-            g.setColor(Color.BLACK);
-            g.drawRect(kx + 2, ky, keyW - 4, h / 6 - 2);
+            int left = x + i * keyWidth;
+            int right = left + keyWidth;
+
+            double factor = 1.0 - (Math.abs(i - center) / (double) center);
+            int topY = baseY - (int) (keyHeight * factor);
+
+            Polygon key = new Polygon(
+                    new int[]{ left, right, right, left },
+                    new int[]{ baseY, baseY, topY, topY },
+                    4
+            );
+
+            g2.setColor(i % 2 == 0 ? keyColor : new Color(200, 200, 200));
+            g2.fillPolygon(key);
+            g2.setColor(Color.BLACK);
+            g2.drawPolygon(key);
         }
     }
 
-    // Encapsulation: getters/setters
-    public Color getBodyColor() { return bodyColor; }
-    public void setBodyColor(Color bodyColor) { this.bodyColor = bodyColor; }
-
-    public Color getKeyColor() { return keyColor; }
-    public void setKeyColor(Color keyColor) { this.keyColor = keyColor; }
-
-    public int getKeyCount() { return keyCount; }
-    public void setKeyCount(int keyCount) { this.keyCount = keyCount; }
+    public int getKeyCount() {
+        return keyCount;
+    }
 }

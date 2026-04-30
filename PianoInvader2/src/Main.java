@@ -1,108 +1,75 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 
 /**
- * Main: creates the window and contains GamePanel as a package-private class.
+ * Main entry point
  */
 public class Main {
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("Piano Invaders - Prototype");
+            JFrame frame = new JFrame("Piano Triangle Instrument");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setResizable(false);
 
-            GamePanel panel = new GamePanel(800, 600);
+            GamePanel panel = new GamePanel(900, 600);
             frame.setContentPane(panel);
             frame.pack();
-            frame.setLocationRelativeTo(null);
             frame.setVisible(true);
-
-            // Ensure the panel has focus for key events
-            panel.requestFocusInWindow();
-            panel.start();
         });
     }
 }
 
-/* GamePanel: kept in Main.java so the project stays to five files.
-   Handles input, game loop, painting, updates, and hit detection. */
-class GamePanel extends JPanel {
-    private final int width;
-    private final int height;
+/**
+ * GamePanel: handles loop, input, drawing
+ */
+class GamePanel extends JPanel implements ActionListener, MouseListener {
+
     private final Piano piano;
     private final Wave wave;
-    private final Timer timer;
+
+    private final javax.swing.Timer timer;
 
     public GamePanel(int width, int height) {
-        this.width = width;
-        this.height = height;
         setPreferredSize(new Dimension(width, height));
-        setFocusable(true);
+        setBackground(new Color(245, 242, 235));
 
-        // Create game objects
-        piano = new Piano(width / 2 - 40, height - 120, 80, 80, width);
-        wave = new Wave(width, height / 3, 60.0, 0.02);
+        // Big stationary piano at bottom
+        piano = new Piano(width, height);
 
-        // Input
-        addKeyListener(new java.awt.event.KeyAdapter() {
-            @Override
-            public void keyPressed(java.awt.event.KeyEvent e) {
-                int kc = e.getKeyCode();
-                if (kc == java.awt.event.KeyEvent.VK_LEFT) piano.moveLeft();
-                if (kc == java.awt.event.KeyEvent.VK_RIGHT) piano.moveRight();
-                if (kc == java.awt.event.KeyEvent.VK_SPACE) piano.shoot();
-            }
-        });
+        // Wave near top
+        wave = new Wave(120);
 
-        // Game loop ~60 FPS
-        timer = new Timer(16, ev -> gameLoop());
-    }
+        addMouseListener(this);
 
-    public void start() {
+        timer = new javax.swing.Timer(16, this);
         timer.start();
-        requestFocusInWindow();
     }
 
-    private void gameLoop() {
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        wave.update();
         piano.updateShots();
-        wave.update(1.5);
-
-        // Collision detection
-        java.util.Iterator<Piano.KeyShot> it = piano.getShots().iterator();
-        while (it.hasNext()) {
-            Piano.KeyShot s = it.next();
-            int shotCenterX = s.getX() + s.getWidth() / 2;
-            int waveY = wave.getY(shotCenterX);
-            int shotY = s.getY();
-
-            // When shot reaches or passes the wave Y (shots move upward)
-            if (shotY <= waveY) {
-                double threshold = Math.abs(wave.getAmplitude()) * 0.05; // 5% of amplitude
-                double diff = shotY - waveY; // negative if shot is above wave (smaller y)
-                if (Math.abs(diff) <= threshold) {
-                    System.out.println("HIT: SAME TONE at x=" + shotCenterX + " y=" + waveY);
-                } else if (diff < -threshold) {
-                    System.out.println("HIT: HIGHER TONE at x=" + shotCenterX + " y=" + waveY);
-                } else {
-                    System.out.println("HIT: LOWER TONE at x=" + shotCenterX + " y=" + waveY);
-                }
-                it.remove();
-            }
-        }
-
         repaint();
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-
-        // Background
-        g.setColor(Color.BLACK);
-        g.fillRect(0, 0, width, height);
-
-        // Draw wave and piano
         wave.draw(g);
         piano.draw(g);
     }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+        if (e.getY() >= piano.getY()) {
+            piano.shoot(e.getX());
+        }
+    }
+
+    public void mouseReleased(MouseEvent e) {}
+    public void mouseClicked(MouseEvent e) {}
+    public void mouseEntered(MouseEvent e) {}
+    public void mouseExited(MouseEvent e) {}
 }
