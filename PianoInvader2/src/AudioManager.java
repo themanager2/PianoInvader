@@ -14,7 +14,7 @@ import javax.sound.sampled.*;
  */
 public class AudioManager {
     private final File soundFolder;
-    private final String[] specialSounds = {"1.wav", "2.wav", "3.wav", "4.wav", "5.wav", "6.wav"};
+    private final String[] specialSounds = {"1.wav", "2.wav", "3.wav", "4.wav"};
     private final ExecutorService soundExecutor;
     private final Random random;
     // Prevent new sound triggers while a WAV is actively playing
