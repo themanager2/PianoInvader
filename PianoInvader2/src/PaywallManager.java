@@ -8,7 +8,7 @@ import javax.swing.ImageIcon;
  * PaywallManager handles the paywall image display, animation, and triggering.
  * Manages:
  * - Loading paywall.jpg
- * - 30% chance to display on user interaction
+ * - 7% chance to display on user interaction
  * - Sliding animation (800ms)
  * - 5 second display duration
  */
@@ -67,7 +67,7 @@ public class PaywallManager {
         if (paywallOriginalImage == null) return false;
         if (paywallVisible) return false;
 
-        boolean show = random.nextDouble() < 0.20;  // 20% chance
+        boolean show = random.nextDouble() < 0.07;  // 7% chance
         if (!show) return false;
         
         paywallVisible = true;

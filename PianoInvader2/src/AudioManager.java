@@ -6,11 +6,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.sound.sampled.*;
 
 /**
- * HitCategory enum for categorizing wave hit types
- */
-public enum HitCategory { HIGHER, LOWER, SAME }
-
-/**
  * AudioManager handles all sound playback:
  * - Loads and plays WAV files
  * - Generates synthetic tones
@@ -50,35 +45,30 @@ public class AudioManager {
     }
     
     public void playSound(int keyIndex, HitCategory category, double waveY, int waveCenterY, int waveAmp) {
-        // If a WAV is already playing, ignore new triggers until it finishes
-        if (wavPlaying.get()) return;
-
         soundExecutor.submit(() -> {
             try {
-                if (random.nextDouble() < 0.80) {  // 80% chance for WAV
-                    // Attempt to reserve the WAV-playing lock. If another thread beat us, abort.
-                    if (!wavPlaying.compareAndSet(false, true)) return;
+                // If a WAV is playing, skip the synthetic tone entirely
+                if (wavPlaying.get()) return;
 
+                // 20% chance to trigger a random WAV instead of the synthetic tone
+                if (random.nextDouble() < 0.20 && wavPlaying.compareAndSet(false, true)) {
                     String wav = specialSounds[random.nextInt(specialSounds.length)];
                     File f = new File(soundFolder, wav);
-                    playWavFile(f);
+                    soundExecutor.submit(() -> playWavFile(f));
                     return;
                 }
-                
-                // Otherwise play synthetic tone
+
+                // Otherwise play the synthetic tone
                 double normalizedY = Math.max(0.0, Math.min(1.0,
                         (waveCenterY + waveAmp - waveY) / (2.0 * waveAmp)));
-                
+
                 double baseFreq = 220.0 + normalizedY * 880.0;
-                
-                switch (category) {
-                    case HIGHER -> baseFreq *= 1.45;
-                    case LOWER  -> baseFreq *= 0.65;
-                    case SAME   -> baseFreq *= 1.0;
-                }
-                
+
+                if (category == HitCategory.HIGHER)      baseFreq *= 1.45;
+                else if (category == HitCategory.LOWER)  baseFreq *= 0.65;
+
                 playChaoticToneRich(baseFreq);
-                
+
             } catch (Exception ignored) {}
         });
     }
